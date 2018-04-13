@@ -7,10 +7,12 @@ module.exports.whereis = (event, context, callback) => {
   let params = {};
   paramsArray.forEach(param => params[param[0]] = param[1]);
   
+  let user = unescape(params.text + "");
+  
   const response = {
     statusCode: 200,
     body: JSON.stringify({
-      text: "@samuelford is in KP today, @jdoe is in FA",
+      text: params.text + "is in KP today",
       attachments: [
         { text: params.text }
       ]
@@ -19,3 +21,10 @@ module.exports.whereis = (event, context, callback) => {
     
   callback(null, response);
 };
+
+function unescape(text) {
+  return text.replace('%3C', '<')
+             .replace('%3E', '<')
+             .replace('%40', '@')
+             .replace('%7C', '|');
+}
