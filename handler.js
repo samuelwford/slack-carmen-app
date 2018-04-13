@@ -9,7 +9,7 @@ module.exports.whereis = (event, context, callback) => {
   const response = {
     statusCode: 200,
     body: JSON.stringify({
-      text: users
+      text: JSON.stringify(users)
     })
   };
     
@@ -36,10 +36,8 @@ function parseUsers(listOfNames) {
 }
 
 function parseUser(name) {
-  console.log(name);
   let match = name.match(/^<(@U\w+)\|(.+)>/);
   if (match) {
-    console.log(match);
     return { id: match[1], name: match[2] };
   } else {
     return name;
