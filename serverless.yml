@@ -18,14 +18,12 @@ provider:
 #    - exclude-me-dir/**
 
 functions:
-  hello:
-    handler: handler.hello
-    events:
-      - http: GET hello
   whereis:
     handler: handler.whereis
     events:
-      - http: GET whereis
+      - http: 
+          path: whereis
+          method: post
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
