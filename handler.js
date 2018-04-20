@@ -1,6 +1,7 @@
 'use strict';
 
 require('./sugar.min');
+const repo = require('./repository');
 
 // command is: /whereis [[@user @user ...] [today|tomorrow|next week|4/15|...] | ...]
 module.exports.whereis = (event, context, callback) => {
@@ -10,6 +11,8 @@ module.exports.whereis = (event, context, callback) => {
   let coalesced = coalesceStrings(users);
   let usersAndDates = parseDates(coalesced);
   let queries = buildQueries(usersAndDates);
+  
+  queries.forEach(execute);
   
   const response = {
     statusCode: 200,
@@ -120,10 +123,8 @@ function buildQueries(items) {
 }
 
 function execute(query) {
-  var text = "where "
-  text += query.users.length < 2 ? "is " : "are ";
-  text += query.users.map(user => user.name).join(", ");
-  text += " on " + query.date.value;
-  
-  return text;
+  query.users.forEach(user => {
+    repo.findUserById(user.id)
+      .then(whereis => console.log(whereis));
+  });
 }
