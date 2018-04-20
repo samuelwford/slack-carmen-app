@@ -12,3 +12,7 @@ handler.whereis({ body: "token=b8ZCB6zG4tjpgSphbAUw4rlA&team_id=T3WG97HEZ&team_d
 handler.whereis({ body: "command=%2Fwhereis&text=sam+dong+++greg+paul"}, {}, (error, response) => { mock_cb("whereis-extra-spaces", error, response) });
 
 handler.whereis({ body: "command=%2Fwhereis&text=%3C%40U3VP4CLCR%7Csteven.haines%3E+today"}, {}, (error, response) => { mock_cb("whereis-encoded-user", error, response) });
+
+handler.whereis({ body: "command=%2Fwhereis&text=%3C%40U3VP4CLCR%7Csteven.haines%3E+next+tuesday+%3C%40U123ABC%7Cjdoe%3E"}, {}, (error, response) => { mock_cb("whereis-encoded-user-2", error, response) });
+
+handler.whereis({ body: "command=%2Fwhereis&text=%3C%40U3VP4CLCR%7Csteven.haines%3E+lsadjflksd+%3C%40U123ABC%7Cjdoe%3E"}, {}, (error, response) => { mock_cb("whereis-encoded-user-3", error, response) });
