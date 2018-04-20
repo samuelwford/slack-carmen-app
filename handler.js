@@ -125,6 +125,7 @@ function buildQueries(items) {
 function execute(query) {
   query.users.forEach(user => {
     repo.findUserById(user.id)
-      .then(whereis => console.log(whereis));
+      .then(whereis => console.log(whereis))
+      .catch(error => console.log(error));
   });
 }
