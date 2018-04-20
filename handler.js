@@ -9,16 +9,12 @@ module.exports.whereis = (event, context, callback) => {
   let users = parseUsers(commandText);
   let coalesced = coalesceStrings(users);
   let usersAndDates = parseDates(coalesced);
-  let tree = parseTree(usersAndDates);
-  
-  console.log(tree);
-  
-  console.log(execute(tree[0]));
+  let queries = buildQueries(usersAndDates);
   
   const response = {
     statusCode: 200,
     body: JSON.stringify({
-      text: JSON.stringify(tree)
+      text: JSON.stringify({ queries: queries })
     })
   };
     
@@ -60,6 +56,7 @@ function parseUser(name) {
 function coalesceStrings(array) {
   let coalesced = [];
   let strings = [];
+  
   while (array.length) {
     let el = array.shift();
     if (typeof el === 'string') {
@@ -98,16 +95,18 @@ function parseDate(item) {
 }
 
 // turn [ user, user, date, user. ... ] into [ query, query, ... ]
-function parseTree(items) {
+function buildQueries(items) {
   var queries = [];
   var query = { users: [], date: parseDate('today'), kind: 'query' };
   
   while (items.length) {
     let item = items.shift();
-    if (item.kind == 'date' && query.users.length) {
-      query.date = item;
-      queries.push(query);
-      query = { users: [], date: parseDate('today'), kind: 'query' };
+    if (item.kind == 'date') {
+      query.date = item;      
+      if (query.users.length) {
+        queries.push(query);
+        query = { users: [], date: parseDate('today'), kind: 'query' };
+      }
     } else {
       query.users.push(item);
     }
