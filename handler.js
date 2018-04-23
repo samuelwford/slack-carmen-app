@@ -5,12 +5,31 @@ const repo = require('./repository');
 
 // command is: /whereis [[@user @user ...] [today|tomorrow|next week|4/15|...] | ...]
 module.exports.whereis = (event, context, callback) => {
+  
+  console.log('event ---');
+  console.log(event);
+  
+  console.log('context ---');
+  console.log(context);
+  
   let params = parseParams(event);
   let commandText = unescape(params.text + "");
   let users = parseUsers(commandText);
   let coalesced = coalesceStrings(users);
   let usersAndDates = parseDates(coalesced);
   let queries = buildQueries(usersAndDates);
+  
+  if (queries.length == 0) {
+    queries.push({
+      users: [{
+        id: params.user_id, 
+        name: params.user_name, 
+        kind: 'user'
+      }], 
+      date: new Date(), 
+      kind: 'query'
+    });
+  }
   
   queries.forEach(execute);
   
