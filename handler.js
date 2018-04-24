@@ -6,17 +6,12 @@ const repo = require('./repository');
 // command is: /whereis [[@user @user ...] [today|tomorrow|next week|4/15|...] | ...]
 module.exports.whereis = (event, context, callback) => {
   
-  console.log('event ---');
-  console.log(event);
-  
-  console.log('context ---');
-  console.log(context);
-  
   let params = parseParams(event);
   let commandText = unescape(params.text + "");
   let users = parseUsers(commandText);
   let coalesced = coalesceStrings(users);
   let usersAndDates = parseDates(coalesced);
+  
   let queries = buildQueries(usersAndDates);
   
   if (queries.length == 0) {
@@ -30,17 +25,25 @@ module.exports.whereis = (event, context, callback) => {
       kind: 'query'
     });
   }
+
+  Promise.all(queries.map(execute))
+    .then(values => {
+      let flattened = [].concat.apply([], values);
+      console.log("consolidated promise results");
+      console.log(flattened);
+    });
   
-  queries.forEach(execute);
+  // let
+  // .reduce([], (acc, thenable) => { thenable.then(data => { acc.push(data) }, error => { console.log(error) }) });
   
-  const response = {
+  let response = {
     statusCode: 200,
     body: JSON.stringify({
-      text: JSON.stringify({ queries: queries })
+      text: '' //locations.join('\n')
     })
   };
-    
-  callback(null, response);
+
+  callback(null, response);      
 };
 
 // turn { body: 'foo=blah&bar=baz'} into { foo: 'blah', bar: 'baz' }
@@ -66,7 +69,7 @@ function parseUsers(listOfNames) {
 
 // turn '<@U123|joe>' into { id: '123', name: 'joe' }
 function parseUser(name) {
-  let match = name.match(/^<(@U\w+)\|(.+)>/);
+  let match = name.match(/^<@(U\w+)\|(.+)>/);
   if (match) {
     return { id: match[1], name: match[2], kind: 'user' };
   } else {
@@ -142,9 +145,22 @@ function buildQueries(items) {
 }
 
 function execute(query) {
-  query.users.forEach(user => {
-    repo.findUserById(user.id)
-      .then(whereis => console.log(whereis))
-      .catch(error => console.log(error));
+  let dateKey = query.date.value.toJSON().substring(0, 10);
+  let dateString = query.date.value.toLocaleDateString();
+  
+  return new Promise((resolve, reject) => {
+    Promise.all(query.users.map(repo.findUser))
+      .then(values => {
+        let results = values.map(data => {
+          let where = data.item.where[dateKey];
+          let userString = "<@" + data.user.id + "|" + data.user.name + ">";
+          if (where == undefined) {
+            return userString + " is home on " + dateString;
+          } else {
+            return userString + " is at " + where + " on " + dateString;
+          }                
+        });
+        resolve(results);
+      });
   });
 }

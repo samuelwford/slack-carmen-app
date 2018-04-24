@@ -3,26 +3,33 @@
 const AWS = require('aws-sdk');
 const dynamo = new AWS.DynamoDB.DocumentClient();
 
+AWS.config.update({ region: 'us-east-1' });
+
 const WHEREIS_TABLE = 'where-is';
 
-var findUserById = function(userId) {
+var findUser = function(user) {
   return new Promise((resolve, reject) => {
     const params = {
       TableName: WHEREIS_TABLE,
-      Key: { user: userId },
-      ProjectionExpression: 'schedule'
+      Key: { user: user.id },
     };
     
+    var response = { user: user };
+    
     dynamo.get(params).promise()
-      .then(result => resolve(result.Item))
-      .catch(error => reject(error));
+      .then(function(result) { 
+              resolve({ user: user, item: result.Item });
+            },
+            function(error) { 
+              reject(error);
+            });
   });
 }
 
-var updateUser = function(userId, schedule) {
+var updateUser = function(user, schedule) {
   var document = {
-    user: userId,
-    schedule: schedule
+    user: user.id,
+    where: schedule
   };
   
   let params = {
@@ -36,5 +43,5 @@ var updateUser = function(userId, schedule) {
     .catch(error => reject(error));
 }
 
-module.exports.findUserById = findUserById;
+module.exports.findUser = findUser;
 module.exports.updateUser = updateUser;
