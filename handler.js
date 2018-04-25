@@ -145,18 +145,13 @@ function execute(query) {
   return new Promise((resolve, reject) => {
     Promise.all(query.users.map(repo.findUser))
       .then(values => {
-        console.log(values);
         let results = values.map(data => {
           let userString = "<@" + data.user.id + "|" + data.user.name + ">";
           var location = userString + " is home on " + dateString;
           
           if (data.item) {
-            console.log('found a data.item')
-            console.log(data.item)
             let where = data.item.where[dateKey];
             if (where) {
-              console.log('found a where value')
-              console.log(where)
               location = userString + " is at " + where + " on " + dateString;
             }
           }
