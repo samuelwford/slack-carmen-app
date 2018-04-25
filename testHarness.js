@@ -32,10 +32,16 @@ repo.findUser( { id: 'ABC123' })
 
 // handler.whereis({ body: "command=%2Fwhereis&text=sam+dong+++greg+paul"}, {}, (error, response) => { mock_cb("whereis-extra-spaces", error, response) });
 
+// whereis @samuel.ford today
 handler.whereis({ body: "command=%2Fwhereis&text=%3C%40U3VNXNV4G%7Csamuel.ford%3E+today"}, {}, (error, response) => { mock_cb("whereis-encoded-user", error, response) });
 
+// whereis @steven.haines next tuesday @jdoe
+handler.whereis({ body: "command=%2Fwhereis&text=%3C%40U3VP4CLCR%7Csteven.haines%3E+next+tuesday+%3C%40U123ABC%7Cjdoe%3E"}, {}, (error, response) => { mock_cb("whereis-encoded-user-2", error, response) });
+
+// whereis @samuel.ford 5/1
 handler.whereis({ body: "command=%2Fwhereis&text=%3C%40U3VNXNV4G%7Csamuel.ford%3E+5%2F1"}, {}, (error, response) => { mock_cb("whereis-encoded-user-3", error, response) });
 
-handler.whereis({ body: "command=%2Fwhereis&text=%3C%40U3VP4CLCR%7Csteven.haines%3E+next+tuesday+%3C%40U123ABC%7Cjdoe%3E"}, {}, (error, response) => { mock_cb("whereis-encoded-user-2", error, response) });
+// whereis 5/1
+handler.whereis({ body: "user_id=U3VNXNV4G&user_name=samuel.ford&command=%2Fwhereis&text=5%2F1"}, {}, (error, response) => { mock_cb("whereis-encoded-user-4", error, response) });
 
 // handler.whereis({ body: "command=%2Fwhereis&text=%3C%40U3VP4CLCR%7Csteven.haines%3E+lsadjflksd+%3C%40U123ABC%7Cjdoe%3E"}, {}, (error, response) => { mock_cb("whereis-encoded-user-3", error, response) });

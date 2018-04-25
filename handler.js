@@ -8,37 +8,46 @@ module.exports.whereis = (event, context, callback) => {
   
   let params = parseParams(event);
   let commandText = unescape(params.text + "");
+  
+  console.log("command text: " + commandText);
+  
   let users = parseUsers(commandText);
   let coalesced = coalesceStrings(users);
   let usersAndDates = parseDates(coalesced);
   
   let queries = buildQueries(usersAndDates);
-  
-  if (queries.length == 0) {
-    queries.push({
-      users: [{
+
+  if (queries.length && queries[0].users.length == 0) {
+    queries[0].users.push({
         id: params.user_id, 
         name: params.user_name, 
         kind: 'user'
-      }], 
-      date: new Date(), 
-      kind: 'query'
-    });
+      });
   }
-
+  
+  describe(queries);
+  
   Promise.all(queries.map(execute))
     .then(values => {
       let flattened = [].concat.apply([], values);
       let response = {
         statusCode: 200,
         body: JSON.stringify({
-          text: flattened.join('\n')
+          text: "Where they are:\n" + flattened.join('\n')
         })
       };
 
+      console.log(response);
+      
       callback(null, response);      
-    });
+    })
+    .catch(error => console.log(error));
 };
+
+function describe(queries) {
+  console.log("queries parsed: " + queries.length);
+  queries.forEach(q => console.log(q));
+}
 
 // turn { body: 'foo=blah&bar=baz'} into { foo: 'blah', bar: 'baz' }
 function parseParams(event) {
@@ -122,10 +131,8 @@ function buildQueries(items) {
     let item = items.shift();
     if (item.kind == 'date') {
       query.date = item;      
-      if (query.users.length) {
-        queries.push(query);
-        query = { users: [], date: parseDate('today'), kind: 'query' };
-      }
+      queries.push(query);
+      query = { users: [], date: parseDate('today'), kind: 'query' };
     } else {
       query.users.push(item);
     }
@@ -147,12 +154,12 @@ function execute(query) {
       .then(values => {
         let results = values.map(data => {
           let userString = "<@" + data.user.id + "|" + data.user.name + ">";
-          var location = userString + " is home on " + dateString;
+          var location = " • It isn't known where " + userString + " is on " + dateString + ".";
           
           if (data.item) {
             let where = data.item.where[dateKey];
             if (where) {
-              location = userString + " is at " + where + " on " + dateString;
+              location = " • " + userString + " is at " + where + " on " + dateString;
             }
           }
           
