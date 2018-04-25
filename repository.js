@@ -3,8 +3,6 @@
 const AWS = require('aws-sdk');
 const dynamo = new AWS.DynamoDB.DocumentClient();
 
-AWS.config.update({ region: 'us-east-1' });
-
 const WHEREIS_TABLE = 'where-is';
 
 var findUser = function(user) {

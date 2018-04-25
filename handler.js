@@ -29,21 +29,15 @@ module.exports.whereis = (event, context, callback) => {
   Promise.all(queries.map(execute))
     .then(values => {
       let flattened = [].concat.apply([], values);
-      console.log("consolidated promise results");
-      console.log(flattened);
-    });
-  
-  // let
-  // .reduce([], (acc, thenable) => { thenable.then(data => { acc.push(data) }, error => { console.log(error) }) });
-  
-  let response = {
-    statusCode: 200,
-    body: JSON.stringify({
-      text: '' //locations.join('\n')
-    })
-  };
+      let response = {
+        statusCode: 200,
+        body: JSON.stringify({
+          text: flattened.join('\n')
+        })
+      };
 
-  callback(null, response);      
+      callback(null, response);      
+    });
 };
 
 // turn { body: 'foo=blah&bar=baz'} into { foo: 'blah', bar: 'baz' }
@@ -152,13 +146,17 @@ function execute(query) {
     Promise.all(query.users.map(repo.findUser))
       .then(values => {
         let results = values.map(data => {
-          let where = data.item.where[dateKey];
           let userString = "<@" + data.user.id + "|" + data.user.name + ">";
-          if (where == undefined) {
-            return userString + " is home on " + dateString;
-          } else {
-            return userString + " is at " + where + " on " + dateString;
-          }                
+          var location = userString + " is home on " + dateString;
+          
+          if (data.item) {
+            let where = data.item.where[dateKey];
+            if (where) {
+              location = userString + " is at " + where + " on " + dateString;
+            }
+          }
+          
+          return location;
         });
         resolve(results);
       });
