@@ -48,7 +48,7 @@ module.exports.whereis = (event, context, callback) => {
 // or alone (display everything): /iamat
 module.exports.iamat = (event, context, callback) => {
   let params = parseParams(event);
-  let commandText = unescape(params.text + "");
+  let commandText = unescape(params.text + "").replace(/\+/g, " ");
   
   console.log("command text: " + commandText);
   
@@ -62,19 +62,21 @@ module.exports.iamat = (event, context, callback) => {
     kind: 'user'
   };
   
+  console.log(user);
+  
   let dateWhen = parseDate(when);
   let dateWhenKey = dateWhen.value.toJSON().substring(0, 10);
   
   // find user (create if needed)
   repo.findUser(user)
     .then(result => {
-      let document = result.item;
-      document.when[dateWhenKey] = where;
+      var document = result.item;
+      document.where[dateWhenKey] = where;
       repo.updateUser(user, document.when)
         .then(result => {
-          let locations = result.item.when.keys().forEach(key => {
+          let locations = result.item.where.keys().forEach(key => {
             let date = new Date(key);
-            let where = result.item.when[key]
+            let where = result.item.where[key]
             return " • " + where + " on " + date.toLocaleDateString();
           });
           

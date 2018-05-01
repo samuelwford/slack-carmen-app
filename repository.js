@@ -23,6 +23,8 @@ var findUser = function(user) {
                 document.where = {}
               }
               
+              console.log(document);
+              
               resolve({ user: user, item: document });
             },
             function(error) { 
