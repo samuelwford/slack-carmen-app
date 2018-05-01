@@ -44,6 +44,58 @@ module.exports.whereis = (event, context, callback) => {
     .catch(error => console.log(error));
 };
 
+// command is: /iamat [place] [today|tomorrow|next week|4/15|...]
+// or alone (display everything): /iamat
+module.exports.iamat = (event, context, callback) => {
+  let params = parseParams(event);
+  let commandText = unescape(params.text + "");
+  
+  console.log("command text: " + commandText);
+  
+  let parts = commandText.split(" ");
+  let where = parts.shift();
+  let when = parts.join(" ");
+
+  let user = {
+    id: params.user_id, 
+    name: params.user_name, 
+    kind: 'user'
+  };
+  
+  let dateWhen = parseDate(when);
+  let dateWhenKey = dateWhen.value.toJSON().substring(0, 10);
+  
+  // find user (create if needed)
+  repo.findUser(user)
+    .then(result => {
+      let document = result.item;
+      document.when[dateWhenKey] = where;
+      repo.updateUser(user, document.when)
+        .then(result => {
+          let locations = result.item.when.keys().forEach(key => {
+            let date = new Date(key);
+            let where = result.item.when[key]
+            return " • " + where + " on " + date.toLocaleDateString();
+          });
+          
+          let response = {
+            statusCode: 200,
+            body: {
+              text: "Where you are:\n" + locations.joing("\n")
+            }
+          };
+          
+          callback(null, response);
+        });
+    }, error => console.log(error));
+    
+  // update
+  
+  // return everything to slack
+  
+}
+
+// dump the queries to the log for diagnostic purposes
 function describe(queries) {
   console.log("queries parsed: " + queries.length);
   queries.forEach(q => console.log(q));

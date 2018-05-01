@@ -22,7 +22,14 @@ functions:
       - http: 
           path: whereis
           method: post
-
+          
+  iamat:
+    handler: handler.iamat
+    events:
+      - http:
+          path: iamat
+          method: post
+          
 resources:
   Resources:
     WhereIsDynamoDBTable:

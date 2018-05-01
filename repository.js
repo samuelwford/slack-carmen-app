@@ -16,7 +16,14 @@ var findUser = function(user) {
     
     dynamo.get(params).promise()
       .then(function(result) { 
-              resolve({ user: user, item: result.Item });
+              let document = result.Item;
+              
+              if (Object.keys(document) == 0) {
+                document.user = user.id,
+                document.where = {}
+              }
+              
+              resolve({ user: user, item: document });
             },
             function(error) { 
               reject(error);
@@ -33,11 +40,13 @@ var updateUser = function(user, schedule) {
   let params = {
     TableName: WHEREIS_TABLE,
     Item: document,
-    ReturnValues: 'NONE'
+    ReturnValues: 'ALL_NEW'
   };
   
   dynamo.put(params).promise()
-    .then(() => resolve(document))
+    .then(result => {
+      resolve({ user: user, item: result.Item });
+    })
     .catch(error => reject(error));
 }
 
