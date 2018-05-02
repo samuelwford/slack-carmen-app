@@ -24,7 +24,6 @@ functions:
       - http: 
           path: whereis
           method: post
-          private: true
           
   iamat:
     handler: handler.iamat
@@ -32,7 +31,6 @@ functions:
       - http:
           path: iamat
           method: post
-          private: true
           
 resources:
   Resources:
