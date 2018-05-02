@@ -19,7 +19,7 @@ functions:
   whereis:
     handler: handler.whereis
     environment:
-      TOKEN: ${env.TOKEN}
+      TOKEN: ${env:TOKEN}
     events:
       - http: 
           path: whereis
@@ -28,7 +28,7 @@ functions:
   iamat:
     handler: handler.iamat
     environment:
-      TOKEN: ${env.TOKEN}
+      TOKEN: ${env:TOKEN}
     events:
       - http:
           path: iamat
