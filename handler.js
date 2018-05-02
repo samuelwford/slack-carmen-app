@@ -72,7 +72,7 @@ module.exports.iamat = (event, context, callback) => {
     .then(result => {
       var document = result.item;
       document.where[dateWhenKey] = where;
-      repo.updateUser(user, document.when)
+      repo.updateUser(user, document.where)
         .then(result => {
           let locations = result.item.where.keys().forEach(key => {
             let date = new Date(key);
@@ -83,18 +83,13 @@ module.exports.iamat = (event, context, callback) => {
           let response = {
             statusCode: 200,
             body: {
-              text: "Where you are:\n" + locations.joing("\n")
+              text: "Where you are:\n" + locations.join("\n");
             }
           };
           
           callback(null, response);
-        });
+        }, error => console.log(error));
     }, error => console.log(error));
-    
-  // update
-  
-  // return everything to slack
-  
 }
 
 // dump the queries to the log for diagnostic purposes
