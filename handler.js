@@ -90,7 +90,7 @@ module.exports.iamat = (event, context, callback) => {
             statusCode: 200,
             body: JSON.stringify({ 
               response_type: 'in_channel',
-              text: "Where you are:\n" + locations.join("\n")
+              text: "Where is <@" + user.id + "|" + user.name + ">:\n" + locations.join("\n")
             })
           };
           
