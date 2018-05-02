@@ -83,7 +83,7 @@ module.exports.iamat = (event, context, callback) => {
           let response = {
             statusCode: 200,
             body: {
-              text: "Where you are:\n" + locations.join("\n");
+              text: "Where you are:\n" + locations.join("\n")
             }
           };
           
