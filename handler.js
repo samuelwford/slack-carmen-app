@@ -5,98 +5,113 @@ const repo = require('./repository');
 
 // command is: /whereis [[@user @user ...] [today|tomorrow|next week|4/15|...] | ...]
 module.exports.whereis = (event, context, callback) => {
+  authorize(event, context, callback, params => {
+    let users = parseUsers(params.commandText);
+    let coalesced = coalesceStrings(users);
+    let usersAndDates = parseDates(coalesced);
   
-  let params = parseParams(event);
-  let commandText = unescape(params.text + "");
-  
-  console.log("command text: " + commandText);
-  
-  let users = parseUsers(commandText);
-  let coalesced = coalesceStrings(users);
-  let usersAndDates = parseDates(coalesced);
-  
-  let queries = buildQueries(usersAndDates);
+    let queries = buildQueries(usersAndDates);
 
-  if (queries.length && queries[0].users.length == 0) {
-    queries[0].users.push({
-        id: params.user_id, 
-        name: params.user_name, 
-        kind: 'user'
-      });
-  }
+    if (queries.length && queries[0].users.length == 0) {
+      queries[0].users.push(params.user);
+    }
   
-  describe(queries);
-  
-  Promise.all(queries.map(execute))
-    .then(values => {
-      let flattened = [].concat.apply([], values);
-      let response = {
-        statusCode: 200,
-        body: JSON.stringify({
-          text: "Where they are:\n" + flattened.join('\n')
-        })
-      };
+    describe(queries);
+    
+    Promise.all(queries.map(execute))
+      .then(values => {
+        let flattened = [].concat.apply([], values);
+        let response = {
+          statusCode: 200,
+          body: JSON.stringify({
+            text: "Where they are:\n" + flattened.join('\n')
+          })
+        };
 
-      console.log(response);
+        console.log(response);
       
-      callback(null, response);      
-    })
-    .catch(error => console.log(error));
+        callback(null, response);      
+      })
+      .catch(error => console.log(error));
+  });  
 };
 
 // command is: /iamat [place] [today|tomorrow|next week|4/15|...]
 // or alone (display everything): /iamat
 module.exports.iamat = (event, context, callback) => {
-  let params = parseParams(event);
-  let commandText = unescape(params.text + "").replace(/\+/g, " ");
+  authorize(event, context, callback, params => {
+    let parts = params.commandText.split(" ");
+    let where = parts.shift();
+    let when = parts.join(" ");
   
-  console.log("command text: " + commandText);
+    let dateWhen = parseDate(when);
+    let dateWhenKey = dateWhen.value.toJSON().substring(0, 10);
+    
+    let today = new Date();
+    let todayKey = today.toJSON().substring(0, 10);
   
-  let parts = commandText.split(" ");
-  let where = parts.shift();
-  let when = parts.join(" ");
+    let user = params.user;
+    console.log(user);
+    
+    // find user (create if needed)
+    repo.findUser(user)
+      .then(result => {
+        var document = result.item;
+        document.where[dateWhenKey] = where;
+        repo.updateUser(user, document.where)
+          .then(result => {
+            let locations = Object.keys(result.item.where)
+              .sort()
+              .filter(key => key >= todayKey)
+              .map(key => {
+                let date = new Date(key);
+                let where = result.item.where[key]
+                return " • " + where + " on " + date.toLocaleDateString();
+              });
+          
+            let response = {
+              statusCode: 200,
+              body: JSON.stringify({ 
+                response_type: 'in_channel',
+                text: "Where is <@" + user.id + "|" + user.name + ">:\n" + locations.join("\n")
+              })
+            };
+          
+            console.log(response);
+          
+            callback(null, response);
+          }, error => console.log(error));
+      }, error => console.log(error));    
+  });  
+}
 
-  let user = {
-    id: params.user_id, 
-    name: params.user_name, 
-    kind: 'user'
-  };
+function authorize(event, context, callback, authorized) {
+  console.log(event);
   
-  console.log(user);
+  let validToken = process.env.TOKEN || '';
+  let params = parse(event);
   
-  let dateWhen = parseDate(when);
-  let dateWhenKey = dateWhen.value.toJSON().substring(0, 10);
+  console.log("command: " + params.commandText);
   
-  let today = new Date();
-  let todayKey = today.toJSON().substring(0, 10);
+  if (params.token == validToken) {
+    console.log("Token '" + params.token + "' authorized.");
+    authorized(params);
+  } else if (params.token == null || params.token == '') {
+    console.log("No token provided, not authorized.");
+    callback(null, { statusCode: 401 });
+  } else {
+    console.log("Token '" + params.token + "' NOT VALID, unauthorized.");    
+    callback(null, { statusCode: 403 });
+  }
+}
+
+function parse(event) {
+  var params = parseParams(event);
   
-  // find user (create if needed)
-  repo.findUser(user)
-    .then(result => {
-      var document = result.item;
-      document.where[dateWhenKey] = where;
-      repo.updateUser(user, document.where)
-        .then(result => {
-          let locations = Object.keys(result.item.where)
-            .sort()
-            .filter(key => key >= todayKey)
-            .map(key => {
-              let date = new Date(key);
-              let where = result.item.where[key]
-              return " • " + where + " on " + date.toLocaleDateString();
-            });
-          
-          let response = {
-            statusCode: 200,
-            body: JSON.stringify({ 
-              response_type: 'in_channel',
-              text: "Where is <@" + user.id + "|" + user.name + ">:\n" + locations.join("\n")
-            })
-          };
-          
-          callback(null, response);
-        }, error => console.log(error));
-    }, error => console.log(error));
+  params.commandText = unescape(params.text + "");  
+  params.user = { id: params.user_id, name: params.user_name, kind: 'user' };
+  
+  return params;
 }
 
 // dump the queries to the log for diagnostic purposes
@@ -118,12 +133,12 @@ function parseParams(event) {
 
 // weak sauce here
 function unescape(text) {
-  return decodeURI(text).replace(/%40/g, '@').replace(/%2F/g, '/');
+  return decodeURI(text).replace(/%40/g, '@').replace(/%2F/g, '/').replace(/\+/g, ' ');
 }
 
 // turn '<@U123|joe>+today' into [ { id: '123', name: 'joe' }, 'today' ]
 function parseUsers(listOfNames) {
-  return listOfNames.split("+").filter(name => name).map(parseUser);
+  return listOfNames.split(" ").filter(name => name).map(parseUser);
 }
 
 // turn '<@U123|joe>' into { id: '123', name: 'joe' }

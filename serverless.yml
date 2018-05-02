@@ -2,8 +2,6 @@ service: slack-sandbox-app
 
 provider:
   name: aws
-  apiKeys:
-    - slackKey
   runtime: nodejs6.10
   iamRoleStatements:
     - Effect: Allow
@@ -20,6 +18,8 @@ provider:
 functions:
   whereis:
     handler: handler.whereis
+    environment:
+      TOKEN: ${env.TOKEN}
     events:
       - http: 
           path: whereis
@@ -27,6 +27,8 @@ functions:
           
   iamat:
     handler: handler.iamat
+    environment:
+      TOKEN: ${env.TOKEN}
     events:
       - http:
           path: iamat
