@@ -67,6 +67,9 @@ module.exports.iamat = (event, context, callback) => {
   let dateWhen = parseDate(when);
   let dateWhenKey = dateWhen.value.toJSON().substring(0, 10);
   
+  let today = new Date();
+  let todayKey = today.toJSON().substring(0, 10);
+  
   // find user (create if needed)
   repo.findUser(user)
     .then(result => {
@@ -74,11 +77,14 @@ module.exports.iamat = (event, context, callback) => {
       document.where[dateWhenKey] = where;
       repo.updateUser(user, document.where)
         .then(result => {
-          let locations = result.item.where.keys().forEach(key => {
-            let date = new Date(key);
-            let where = result.item.where[key]
-            return " • " + where + " on " + date.toLocaleDateString();
-          });
+          let locations = Object.keys(result.item.where)
+            .sort()
+            .filter(key => key >= todayKey)
+            .map(key => {
+              let date = new Date(key);
+              let where = result.item.where[key]
+              return " • " + where + " on " + date.toLocaleDateString();
+            });
           
           let response = {
             statusCode: 200,

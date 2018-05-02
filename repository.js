@@ -16,20 +16,20 @@ var findUser = function(user) {
     
     dynamo.get(params).promise()
       .then(function(result) { 
-              let document = result.Item;
-              
-              if (Object.keys(document) == 0) {
-                document.user = user.id,
-                document.where = {}
-              }
-              
-              console.log(document);
-              
-              resolve({ user: user, item: document });
-            },
-            function(error) { 
-              reject(error);
-            });
+        let document = result.Item || {};
+        
+        if (Object.keys(document) == 0) {
+          document.user = user.id,
+          document.where = {}
+        }
+        
+        console.log(document);
+        
+        resolve({ user: user, item: document });
+      },
+      function(error) { 
+        reject(error);
+      });
   });
 }
 
@@ -42,14 +42,13 @@ var updateUser = function(user, schedule) {
   let params = {
     TableName: WHEREIS_TABLE,
     Item: document,
-    ReturnValues: 'ALL_NEW'
+    ReturnValues: 'NONE'
   };
   
+  return new Promise((resolve, reject) => {
   dynamo.put(params).promise()
-    .then(result => {
-      resolve({ user: user, item: result.Item });
-    })
-    .catch(error => reject(error));
+    .then(result => resolve({ user: user, item: document }), error => reject(error));
+  });
 }
 
 module.exports.findUser = findUser;
