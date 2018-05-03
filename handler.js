@@ -142,8 +142,7 @@ function helpForIamat(command) {
                    " • " + command + " OOO 5/27",
             short: false
           }
-        ],
-        ts: new Date()
+        ]
       }
     ]};
 
@@ -186,8 +185,7 @@ function helpForWhereis(command) {
                    " • " + command + " @jdoe @sally.smith 5/27 @bob friday",
             short: false
           }
-        ],
-        ts: new Date()
+        ]
       }
     ]};
 
