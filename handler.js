@@ -11,9 +11,7 @@ module.exports.whereis = (event, context, callback) => {
     if (['', '?', 'help', 'h'].includes(stripped)) {
       let response = {
         statusCode: 200,
-        body: JSON.stringify({
-          text: helpForWhereis(params.command)
-        })
+        body: JSON.stringify(helpForWhereis(params.command))
       };
       
       callback(null, response);
@@ -51,7 +49,6 @@ module.exports.whereis = (event, context, callback) => {
 };
 
 // command is: /iamat [place] [today|tomorrow|next week|4/15|...]
-// or alone (display everything): /iamat
 module.exports.iamat = (event, context, callback) => {
   authorize(event, context, callback, params => {
     
