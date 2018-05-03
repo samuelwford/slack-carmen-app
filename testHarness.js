@@ -46,3 +46,5 @@ handler.whereis({ body: "command=%2Fwhereis&text=%3C%40U3VP4CLCR%7Csteven.haines
 handler.iamat({ body: "user_id=U3VNXNV4G&user_name=samuel.ford&command=%2Fiamat&text=kp+today&token=abc123"}, {}, (error, response)=> { mock_cb("/iamat kp today", error, response) });
 
 handler.iamat({ body: "user_id=U3VNXNV4G&user_name=samuel.ford&command=%2Fiamat&text=help&token=abc123"}, {}, (error, response) => { mock_cb("/iamat help", error, response) });
+
+handler.whereis({ body: "user_id=U3VNXNV4G&user_name=samuel.ford&command=%2Fwhereis&text=?&token=abc123"}, {}, (error, response) => { mock_cb("/whereis help", error, response) });

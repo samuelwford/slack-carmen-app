@@ -7,7 +7,8 @@ const repo = require('./repository');
 module.exports.whereis = (event, context, callback) => {
   authorize(event, context, callback, params => {
 
-    if (['', '?', 'help', 'h'].includes(params.commandText.toLowerCase())) {
+    let stripped = params.commandText.toLowerCase().trim()
+    if (['', '?', 'help', 'h'].includes(stripped)) {
       let response = {
         statusCode: 200,
         body: JSON.stringify({
@@ -54,7 +55,8 @@ module.exports.whereis = (event, context, callback) => {
 module.exports.iamat = (event, context, callback) => {
   authorize(event, context, callback, params => {
     
-    if (['', '?', 'help', 'h'].includes(params.commandText.toLowerCase())) {
+    let stripped = params.commandText.toLowerCase().trim()
+    if (['', '?', 'help', 'h'].includes(stripped)) {
       let response = {
         statusCode: 200,
         body: JSON.stringify(helpForIamat(params.command))
@@ -151,7 +153,7 @@ function helpForIamat(command) {
     return help;
 }
 
-function helpForWhereis(commandName) {
+function helpForWhereis(command) {
   let help = { attachments: [
       {
         fallback: "Help for " + command + " command.",
