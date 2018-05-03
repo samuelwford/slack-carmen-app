@@ -6,6 +6,19 @@ const repo = require('./repository');
 // command is: /whereis [[@user @user ...] [today|tomorrow|next week|4/15|...] | ...]
 module.exports.whereis = (event, context, callback) => {
   authorize(event, context, callback, params => {
+
+    if (['', '?', 'help', 'h'].includes(params.commandText.toLowerCase())) {
+      let response = {
+        statusCode: 200,
+        body: JSON.stringify({
+          text: helpForWhereis(params.command)
+        })
+      };
+      
+      callback(null, response);
+      return;
+    }
+    
     let users = parseUsers(params.commandText);
     let coalesced = coalesceStrings(users);
     let usersAndDates = parseDates(coalesced);
@@ -40,6 +53,19 @@ module.exports.whereis = (event, context, callback) => {
 // or alone (display everything): /iamat
 module.exports.iamat = (event, context, callback) => {
   authorize(event, context, callback, params => {
+    
+    if (['', '?', 'help', 'h'].includes(params.commandText.toLowerCase())) {
+      let response = {
+        statusCode: 200,
+        body: JSON.stringify({
+          text: helpForIamat(params.command)
+        })
+      };
+      
+      callback(null, response);
+      return;
+    }
+    
     let parts = params.commandText.split(" ");
     let where = parts.shift();
     let when = parts.join(" ");
@@ -83,6 +109,48 @@ module.exports.iamat = (event, context, callback) => {
           }, error => console.log(error));
       }, error => console.log(error));    
   });  
+}
+
+function helpForIamat(commandName) {
+  let help = "Record where you will be on a certain day.\n" +
+    "\n*Usage:*\n" +
+    "`" + commandName + " location [date]`\n" +
+    "\n*Description:*\n" +
+    "`location` is required and expected to be a single word (e.g. 'KP', 'TeamDisney', 'OOO'). `date` is optional " +
+    "and the current date is assumed if omitted. `date` can be in several forms:\n" +
+    " • today\n" +
+    " • tomorrow\n" +
+    " • 6/2\n" +
+    " • next friday\n" +
+    " • last tuesday in june\n" +
+    "\n*Examples:*\n" +
+    " • `" + commandName + " KP`\n" +
+    " • `" + commandName + " TDA tomorrow`\n" +
+    " • `" + commandName + " OOO 5/27`\n";
+  
+  return help;
+}
+
+function helpForWhereis(commandName) {
+  let help = "Look up where users are or will be on certain days.\n" +
+    "\n*Usage:*\n" +
+    "`" + commandName + " @user [...] [date] ...`" +
+    "\n*Description:*\n" +
+    "One or more Slack user names can be provided with an optional `date`. If `date` is not supplied " +
+    "the current day is assumed. Sets of user names and a date can be repeated as needed.\n" +
+    "`date` can be in several forms:\n" +
+    " • today\n" +
+    " • tomorrow\n" +
+    " • 6/2\n" +
+    " • next friday\n" +
+    " • last tuesday in june\n" +
+    "\n*Examples:*\n" +
+    " • `" + commandName + " @jdoe`\n" +
+    " • `" + commandName + " @jdoe tomorrow`\n" +
+    " • `" + commandName + " @jdoe @sally.smith 5/27`\n" +
+    " • `" + commandName + " @jdoe @sally.smith 5/27 @bob friday`\n";
+    
+  return help;
 }
 
 function authorize(event, context, callback, authorized) {
