@@ -57,9 +57,7 @@ module.exports.iamat = (event, context, callback) => {
     if (['', '?', 'help', 'h'].includes(params.commandText.toLowerCase())) {
       let response = {
         statusCode: 200,
-        body: JSON.stringify({
-          text: helpForIamat(params.command)
-        })
+        body: JSON.stringify(helpForIamat(params.command))
       };
       
       callback(null, response);
@@ -111,46 +109,90 @@ module.exports.iamat = (event, context, callback) => {
   });  
 }
 
-function helpForIamat(commandName) {
-  let help = "Record where you will be on a certain day.\n" +
-    "\n*Usage:*\n" +
-    "`" + commandName + " location [date]`\n" +
-    "\n*Description:*\n" +
-    "`location` is required and expected to be a single word (e.g. 'KP', 'TeamDisney', 'OOO'). `date` is optional " +
-    "and the current date is assumed if omitted. `date` can be in several forms:\n" +
-    " • today\n" +
-    " • tomorrow\n" +
-    " • 6/2\n" +
-    " • next friday\n" +
-    " • last tuesday in june\n" +
-    "\n*Examples:*\n" +
-    " • `" + commandName + " KP`\n" +
-    " • `" + commandName + " TDA tomorrow`\n" +
-    " • `" + commandName + " OOO 5/27`\n";
-  
-  return help;
+function helpForIamat(command) {
+  let help = { attachments: [
+      {
+        fallback: "Help for " + command + " command.",
+        color: "#36a64f",
+        pretext: "How to use the " + command + " command.",
+        author_name: command,
+        title: "Command Help",
+        text: "Record where you will be on a certain day.",
+        fields: [
+          {
+            title: "Usage",
+            value: command + " location [date]",
+            short: false
+          },
+          {
+            title: "Description",
+            value: "Location is required and expected to be a single word (e.g. 'KP', 'TeamDisney', 'OOO'). " +
+                   "Date is optional and the current date is assumed if omitted.\n" +
+                   "Date can be in several forms:\n" +
+                   " • today\n" +
+                   " • tomorrow\n" +
+                   " • 6/2\n" +
+                   " • next friday\n" +
+                   " • last tuesday in june",
+            short: false
+          },
+          {
+            title: "Examples",
+            value: " • " + command + " KP\n" +
+                   " • " + command + " TDA tomorrow\n" +
+                   " • " + command + " OOO 5/27",
+            short: false
+          }
+        ],
+        ts: new Date()
+      }
+    ]};
+
+    return help;
 }
 
 function helpForWhereis(commandName) {
-  let help = "Look up where users are or will be on certain days.\n" +
-    "\n*Usage:*\n" +
-    "`" + commandName + " @user [...] [date] ...`" +
-    "\n*Description:*\n" +
-    "One or more Slack user names can be provided with an optional `date`. If `date` is not supplied " +
-    "the current day is assumed. Sets of user names and a date can be repeated as needed.\n" +
-    "`date` can be in several forms:\n" +
-    " • today\n" +
-    " • tomorrow\n" +
-    " • 6/2\n" +
-    " • next friday\n" +
-    " • last tuesday in june\n" +
-    "\n*Examples:*\n" +
-    " • `" + commandName + " @jdoe`\n" +
-    " • `" + commandName + " @jdoe tomorrow`\n" +
-    " • `" + commandName + " @jdoe @sally.smith 5/27`\n" +
-    " • `" + commandName + " @jdoe @sally.smith 5/27 @bob friday`\n";
-    
-  return help;
+  let help = { attachments: [
+      {
+        fallback: "Help for " + command + " command.",
+        color: "#36a64f",
+        pretext: "How to use the " + command + " command.",
+        author_name: command,
+        title: "Command Help",
+        text: "Look up where users are or will be on certain days.",
+        fields: [
+          {
+            title: "Usage",
+            value: command + " @user [...] [date] ...",
+            short: false
+          },
+          {
+            title: "Description",
+            value: "One or more Slack user names can be provided with an optional date. " +
+                   "If `date` is not supplied the current day is assumed. Sets of user names " +
+                   "and a date can be repeated as needed.\n" +
+                   "Date can be in several forms:\n" +
+                   " • today\n" +
+                   " • tomorrow\n" +
+                   " • 6/2\n" +
+                   " • next friday\n" +
+                   " • last tuesday in june",
+            short: false
+          },
+          {
+            title: "Examples",
+            value: " • " + command + " @jdoe\n" +
+                   " • " + command + " @jdoe tomorrow\n" +
+                   " • " + command + " @jdoe @sally.smith 5/27\n" +
+                   " • " + command + " @jdoe @sally.smith 5/27 @bob friday",
+            short: false
+          }
+        ],
+        ts: new Date()
+      }
+    ]};
+
+    return help;
 }
 
 function authorize(event, context, callback, authorized) {
@@ -176,7 +218,8 @@ function authorize(event, context, callback, authorized) {
 function parse(event) {
   var params = parseParams(event);
   
-  params.commandText = unescape(params.text + "");  
+  params.commandText = unescape(params.text + "");
+  params.command = unescape(params.command);
   params.user = { id: params.user_id, name: params.user_name, kind: 'user' };
   
   return params;
