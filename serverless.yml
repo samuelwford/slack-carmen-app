@@ -17,7 +17,6 @@ provider:
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
       Resource:
-        - { "Fn::GetAtt": ["WhereIsDynamoDBTable", "Arn"] }
         - { "Fn::GetAtt": ["CarmenDynamoDBTable", "Arn"] }
   environment:
     CARMEN_TABLE: ${self:custom.tableName}
@@ -38,20 +37,6 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         TableName: ${self:custom.tableName}
-        AttributeDefinitions:
-          - AttributeName: user
-            AttributeType: S
-        KeySchema:
-          - AttributeName: user
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
-
-    WhereIsDynamoDBTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: where-is
         AttributeDefinitions:
           - AttributeName: user
             AttributeType: S

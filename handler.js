@@ -5,14 +5,14 @@ const repo = require('./repository');
 
 // invocation dispatcher
 module.exports.carmen = (event, context, callback) => {
-  authorize(event, context, callback, params => {
+  authorize(event, context, callback, (context, params) => {
     switch(params.command) {
       case "/whereis":
-        whereis(event, context, callback, params);
+        whereis(callback, params);
         break;
   
       case "/iamat":
-        iamat(event, context, callback, params);
+        iamat(callback, params);
         break;
       
       default:
@@ -23,7 +23,7 @@ module.exports.carmen = (event, context, callback) => {
 }
 
 // command is: /whereis [[@user @user ...] [today|tomorrow|next week|4/15|...] | ...]
-function whereis(event, context, callback, params) {
+function whereis(callback, params) {
   let stripped = params.commandText.toLowerCase().trim()
   if (['', '?', 'help', 'h'].includes(stripped)) {
     let response = {
@@ -63,10 +63,9 @@ function whereis(event, context, callback, params) {
     })
     .catch(error => console.log(error));
 };
-module.exports.whereis = whereis;
 
 // command is: /iamat [place] [today|tomorrow|next week|4/15|...]
-function iamat(event, context, callback, params) {
+function iamat(callback, params) {
   let stripped = params.commandText.toLowerCase().trim()
   if (['', '?', 'help', 'h'].includes(stripped)) {
     let response = {
@@ -121,7 +120,6 @@ function iamat(event, context, callback, params) {
         }, error => console.log(error));
     }, error => console.log(error));    
 }
-module.exports.iamat = iamat;
 
 function helpForIamat(command) {
   let help = { attachments: [
@@ -217,7 +215,7 @@ function authorize(event, context, callback, authorized) {
   
   if (params.token == validToken) {
     console.log("Token '" + params.token + "' authorized.");
-    authorized(params);
+    authorized(callback, params);
   } else if (params.token == null || params.token == '') {
     console.log("No token provided, not authorized.");
     callback(null, { statusCode: 401 });
