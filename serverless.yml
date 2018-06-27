@@ -1,5 +1,8 @@
 service: slack-sandbox-app
 
+custom:
+  tableName: 'carmen-${self:provider.stage}'
+  
 provider:
   name: aws
   runtime: nodejs6.10
@@ -15,7 +18,9 @@ provider:
         - dynamodb:DeleteItem
       Resource:
         - { "Fn::GetAtt": ["WhereIsDynamoDBTable", "Arn"] }
-                                
+  environment:
+    CARMEN_TABLE: ${self:custom.tableName}
+    
 functions:
   whereis:
     handler: handler.whereis
@@ -35,8 +40,31 @@ functions:
           path: iamat
           method: post
           
+  carmen:
+    handler: handler.carmen
+    environment:
+      TOKEN: ${env:${self:provider.stage}_TOKEN}
+    events:
+      - http:
+          path: carmen
+          method: post
+          
 resources:
   Resources:
+    CarmenDynamoDBTable:
+      Type: AWS:DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.tableName}
+        AttributeDefinitions:
+          - AttributeName: user
+            AttributeType: S
+        KeySchema:
+          - AttributeName: user
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
     WhereIsDynamoDBTable:
       Type: AWS::DynamoDB::Table
       Properties:

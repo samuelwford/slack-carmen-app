@@ -3,109 +3,122 @@
 require('./sugar.min');
 const repo = require('./repository');
 
-// command is: /whereis [[@user @user ...] [today|tomorrow|next week|4/15|...] | ...]
-module.exports.whereis = (event, context, callback) => {
+// invocation dispatcher
+module.exports.carmen = (event, context, callback) => {
   authorize(event, context, callback, params => {
+    switch(params.command) {
+      case "/whereis":
+        whereis(event, context, callback, params);
+        break;
+  
+      case "/iamat":
+        iamat(event, context, callback, params);
+        break;
+      
+      default:
+        callback(null, { statusCode: 400, body: JSON.stringify({ text: "Unrecognized command: " + params.command }) });
+        break;
+    }
+  });
+}
 
-    let stripped = params.commandText.toLowerCase().trim()
-    if (['', '?', 'help', 'h'].includes(stripped)) {
+// command is: /whereis [[@user @user ...] [today|tomorrow|next week|4/15|...] | ...]
+module.exports.whereis = (event, context, callback, params) => {
+  let stripped = params.commandText.toLowerCase().trim()
+  if (['', '?', 'help', 'h'].includes(stripped)) {
+    let response = {
+      statusCode: 200,
+      body: JSON.stringify(helpForWhereis(params.command))
+    };
+    
+    callback(null, response);
+    return;
+  }
+  
+  let users = parseUsers(params.commandText);
+  let coalesced = coalesceStrings(users);
+  let usersAndDates = parseDates(coalesced);
+
+  let queries = buildQueries(usersAndDates);
+
+  if (queries.length && queries[0].users.length == 0) {
+    queries[0].users.push(params.user);
+  }
+
+  describe(queries);
+  
+  Promise.all(queries.map(execute))
+    .then(values => {
+      let flattened = [].concat.apply([], values);
       let response = {
         statusCode: 200,
-        body: JSON.stringify(helpForWhereis(params.command))
+        body: JSON.stringify({
+          text: "Where they are:\n" + flattened.join('\n')
+        })
       };
-      
-      callback(null, response);
-      return;
-    }
-    
-    let users = parseUsers(params.commandText);
-    let coalesced = coalesceStrings(users);
-    let usersAndDates = parseDates(coalesced);
-  
-    let queries = buildQueries(usersAndDates);
 
-    if (queries.length && queries[0].users.length == 0) {
-      queries[0].users.push(params.user);
-    }
-  
-    describe(queries);
+      console.log(response);
     
-    Promise.all(queries.map(execute))
-      .then(values => {
-        let flattened = [].concat.apply([], values);
-        let response = {
-          statusCode: 200,
-          body: JSON.stringify({
-            text: "Where they are:\n" + flattened.join('\n')
-          })
-        };
-
-        console.log(response);
-      
-        callback(null, response);      
-      })
-      .catch(error => console.log(error));
-  });  
+      callback(null, response);      
+    })
+    .catch(error => console.log(error));
 };
 
 // command is: /iamat [place] [today|tomorrow|next week|4/15|...]
-module.exports.iamat = (event, context, callback) => {
-  authorize(event, context, callback, params => {
+module.exports.iamat = (event, context, callback, params) => {
+  let stripped = params.commandText.toLowerCase().trim()
+  if (['', '?', 'help', 'h'].includes(stripped)) {
+    let response = {
+      statusCode: 200,
+      body: JSON.stringify(helpForIamat(params.command))
+    };
     
-    let stripped = params.commandText.toLowerCase().trim()
-    if (['', '?', 'help', 'h'].includes(stripped)) {
-      let response = {
-        statusCode: 200,
-        body: JSON.stringify(helpForIamat(params.command))
-      };
-      
-      callback(null, response);
-      return;
-    }
-    
-    let parts = params.commandText.split(" ");
-    let where = parts.shift();
-    let when = parts.join(" ");
+    callback(null, response);
+    return;
+  }
   
-    let dateWhen = parseDate(when);
-    let dateWhenKey = dateWhen.value.toJSON().substring(0, 10);
-    
-    let today = new Date();
-    let todayKey = today.toJSON().substring(0, 10);
+  let parts = params.commandText.split(" ");
+  let where = parts.shift();
+  let when = parts.join(" ");
+
+  let dateWhen = parseDate(when);
+  let dateWhenKey = dateWhen.value.toJSON().substring(0, 10);
   
-    let user = params.user;
-    console.log(user);
-    
-    // find user (create if needed)
-    repo.findUser(user)
-      .then(result => {
-        var document = result.item;
-        document.where[dateWhenKey] = where;
-        repo.updateUser(user, document.where)
-          .then(result => {
-            let locations = Object.keys(result.item.where)
-              .sort()
-              .filter(key => key >= todayKey)
-              .map(key => {
-                let date = new Date(key);
-                let where = result.item.where[key]
-                return " • " + where + " on " + date.toLocaleDateString();
-              });
-          
-            let response = {
-              statusCode: 200,
-              body: JSON.stringify({ 
-                response_type: 'in_channel',
-                text: "Where is <@" + user.id + "|" + user.name + ">:\n" + locations.join("\n")
-              })
-            };
-          
-            console.log(response);
-          
-            callback(null, response);
-          }, error => console.log(error));
-      }, error => console.log(error));    
-  });  
+  let today = new Date();
+  let todayKey = today.toJSON().substring(0, 10);
+
+  let user = params.user;
+  console.log(user);
+  
+  // find user (create if needed)
+  repo.findUser(user)
+    .then(result => {
+      var document = result.item;
+      document.where[dateWhenKey] = where;
+      repo.updateUser(user, document.where)
+        .then(result => {
+          let locations = Object.keys(result.item.where)
+            .sort()
+            .filter(key => key >= todayKey)
+            .map(key => {
+              let date = new Date(key);
+              let where = result.item.where[key]
+              return " • " + where + " on " + date.toLocaleDateString();
+            });
+        
+          let response = {
+            statusCode: 200,
+            body: JSON.stringify({ 
+              response_type: 'in_channel',
+              text: "Where is <@" + user.id + "|" + user.name + ">:\n" + locations.join("\n")
+            })
+          };
+        
+          console.log(response);
+        
+          callback(null, response);
+        }, error => console.log(error));
+    }, error => console.log(error));    
 }
 
 function helpForIamat(command) {

@@ -3,12 +3,12 @@
 const AWS = require('aws-sdk');
 const dynamo = new AWS.DynamoDB.DocumentClient();
 
-const WHEREIS_TABLE = 'where-is';
+const CARMEN_TABLE = process.env.CARMEN_TABLE;
 
 var findUser = function(user) {
   return new Promise((resolve, reject) => {
     const params = {
-      TableName: WHEREIS_TABLE,
+      TableName: CARMEN_TABLE,
       Key: { user: user.id },
     };
     
@@ -40,7 +40,7 @@ var updateUser = function(user, schedule) {
   };
   
   let params = {
-    TableName: WHEREIS_TABLE,
+    TableName: CARMEN_TABLE,
     Item: document,
     ReturnValues: 'NONE'
   };
