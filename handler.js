@@ -23,7 +23,7 @@ module.exports.carmen = (event, context, callback) => {
 }
 
 // command is: /whereis [[@user @user ...] [today|tomorrow|next week|4/15|...] | ...]
-module.exports.whereis = (event, context, callback, params) => {
+function whereis(event, context, callback, params) {
   let stripped = params.commandText.toLowerCase().trim()
   if (['', '?', 'help', 'h'].includes(stripped)) {
     let response = {
@@ -63,9 +63,10 @@ module.exports.whereis = (event, context, callback, params) => {
     })
     .catch(error => console.log(error));
 };
+module.exports.whereis = whereis;
 
 // command is: /iamat [place] [today|tomorrow|next week|4/15|...]
-module.exports.iamat = (event, context, callback, params) => {
+function iamat(event, context, callback, params) {
   let stripped = params.commandText.toLowerCase().trim()
   if (['', '?', 'help', 'h'].includes(stripped)) {
     let response = {
@@ -120,6 +121,7 @@ module.exports.iamat = (event, context, callback, params) => {
         }, error => console.log(error));
     }, error => console.log(error));    
 }
+module.exports.iamat = iamat;
 
 function helpForIamat(command) {
   let help = { attachments: [
