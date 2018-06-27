@@ -346,7 +346,7 @@ function execute(query) {
       .then(values => {
         let results = values.map(data => {
           let userString = "<@" + data.user.id + "|" + data.user.name + ">";
-          var location = " • It isn't known where " + userString + " is on " + dateString + ".";
+          var location = " • I don't know where " + userString + " is on " + dateString + ".";
           
           if (data.item) {
             let where = data.item.where[dateKey];
