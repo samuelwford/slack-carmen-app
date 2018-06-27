@@ -23,24 +23,6 @@ provider:
     CARMEN_TABLE: ${self:custom.tableName}
     
 functions:
-  whereis:
-    handler: handler.whereis
-    environment:
-      TOKEN: ${env:${self:provider.stage}_TOKEN}
-    events:
-      - http: 
-          path: whereis
-          method: post
-          
-  iamat:
-    handler: handler.iamat
-    environment:
-      TOKEN: ${env:${self:provider.stage}_TOKEN}
-    events:
-      - http:
-          path: iamat
-          method: post
-          
   carmen:
     handler: handler.carmen
     environment:
