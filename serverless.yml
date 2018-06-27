@@ -18,6 +18,7 @@ provider:
         - dynamodb:DeleteItem
       Resource:
         - { "Fn::GetAtt": ["WhereIsDynamoDBTable", "Arn"] }
+        - { "Fn::GetAtt": ["CarmenDynamoDBTable", "Arn"] }
   environment:
     CARMEN_TABLE: ${self:custom.tableName}
     
