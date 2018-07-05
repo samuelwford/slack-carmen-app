@@ -269,12 +269,13 @@ function tokenize(text) {
     let c = text.slice(pos, pos + 1);
     pos += 1;
 
-    if (c == '"') {
-      if (quoted == true) {
-        quoted = false;
-      } else {
-        quoted = true;
-      }
+    if (quoted == false && (c == '"' || c == '“')) {
+      quoted = true;
+      continue;
+    }
+
+    if (quoted == true && (c == '"' || c == '”')) {
+      quoted = false;
       continue;
     }
 

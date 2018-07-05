@@ -20,9 +20,8 @@ provider:
         - { "Fn::GetAtt": ["CarmenDynamoDBTable", "Arn"] }
   environment:
     CARMEN_TABLE: ${self:custom.tableName}
-    
+
 functions:
-      TOKEN: ${env:${self:provider.stage}_TOKEN}
   carmen:
     handler: handler.carmen
     environment:
