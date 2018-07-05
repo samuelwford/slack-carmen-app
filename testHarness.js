@@ -32,7 +32,7 @@ repo.findUser( { id: 'ABC123' })
     console.log(error);
   });
 
-handler.whereis({}, {}, (error, response) => { mock_cb("whereis", error, response) }, { command: "/whereis", commandText: "" });
+handler.carmen({}, {}, (error, response) => { mock_cb("whereis", error, response) }, { command: "/whereis", commandText: "" });
 
 // whereis @samuel.ford today
 handler.carmen({ body: "command=%2Fwhereis&text=%3C%40U3VNXNV4G%7Csamuel.ford%3E+today&token=abc123"}, {}, (error, response) => { mock_cb("whereis-encoded-user", error, response) });

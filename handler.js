@@ -77,7 +77,7 @@ function iamat(callback, params) {
     return;
   }
   
-  let parts = params.commandText.split(" ");
+  let parts = tokenize(params.commandText);
   let where = parts.shift();
   let when = parts.join(" ");
 
@@ -255,6 +255,45 @@ function parseParams(event) {
 // weak sauce here
 function unescape(text) {
   return decodeURI(text).replace(/%40/g, '@').replace(/%2F/g, '/').replace(/\+/g, ' ');
+}
+
+// fairly primitive text tokenizer that recognizes quoted strings
+function tokenize(text) {
+  let len = text.length;
+  let pos = 0;
+  var tokens = [];
+  var quoted = false;
+  var buffer = '';
+
+  while (pos < len ) {
+    let c = text.slice(pos, pos + 1);
+    pos += 1;
+
+    if (c == '"') {
+      if (quoted == true) {
+        quoted = false;
+      } else {
+        quoted = true;
+      }
+      continue;
+    }
+
+    if (quoted == false && c == ' ') {
+      if (buffer.length > 0) {
+        tokens.push(buffer);
+        buffer = '';
+      }
+      continue;
+    }
+
+    buffer = buffer.concat(c);
+  }
+
+  if (buffer.length > 0) {
+    tokens.push(buffer);
+  }
+
+  return tokens;
 }
 
 // turn '<@U123|joe>+today' into [ { id: '123', name: 'joe' }, 'today' ]
